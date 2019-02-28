@@ -1,0 +1,82 @@
+nano /etc/fstab
+
+LABEL=KROSS  /media/bkphd ntfs-3g     nofail,auto,hotplug,async,user,defaults,relatime,noatime,nodiratime        1 2
+
+nano /etc/udev/rules.d/99-mount.rules
+
+#run mount -a everytime a block device is added/removed
+SUBSYSTEM=="block", run+="beep && /bin/mount -a"
+
+nano /home/Backup/bkphd.sh
+#!/bin/bash
+#
+#-----------------------------------------------------------------------
+#
+# Script to do a backup when selected USB HD is inserted
+# It is called thru UDEV with :
+# - the device name (sda1, ...) given as the first parameter
+#
+#-----------------------------------------------------------------------
+#
+
+# Issue begin process beep
+beep -l 75 -f 500 -n -l 75 -f 1000 -n -l 75 -f 2000 -n -l 75 -f 3000
+
+# Log beggining of backup
+/usr/bin/logger Backup - Started on`date`
+
+# Backup using RSync
+/usr/bin/logger Backup - Full
+/usr/bin/rsync -rtv --del --modify-window=2 /home/Administrativo /media/bkphd
+/usr/bin/rsync -rtv --del --modify-window=2 /home/Apoio\ Administrativo /media/bkphd
+/usr/bin/rsync -rtv --del --modify-window=2 /home/Clientes /media/bkphd
+/usr/bin/rsync -rtv --del --modify-window=2 /home/Colaboradores /media/bkphd
+/usr/bin/rsync -rtv --del --modify-window=2 /home/Contratos\ e\ Propostas /media/bkphd
+/usr/bin/rsync -rtv --del --modify-window=2 /home/Correspondentes /media/bkphd
+/usr/bin/rsync -rtv --del --modify-window=2 /home/Instalacao /media/bkphd
+/usr/bin/rsync -rtv --del --modify-window=2 /home/log /media/bkphd
+/usr/bin/rsync -rtv --del --modify-window=2 /home/Modelos\ e\ Normas /media/bkphd
+/usr/bin/rsync -rtv --del --modify-window=2 /home/Secretaria /media/bkphd
+/sbin/samba_backup
+
+# Remove duplicated copies that were modifyed more than 2 times
+/usr/bin/rsync -rtv --del --modify-window=2 /home/Backup/samba/DBmanual/samba_backup /media/bkphd
+
+# force sync before unmount
+/bin/sync
+
+# Issue end of backup beep
+beep -l 75 -f 500 -n -l 75 -f 1000 -n -l 75 -f 2000 -n -l 75 -f 3000
+
+# unmount HD
+/bin/umount /media/bkphd
+udisksctl power-off -b /dev/sdd
+
+# Issue unmount beep
+beep
+# Log the end of backup
+/usr/bin/logger Backup - Ended on `date`
+
+
+
+========================
+chmod a+x /home/Backup/bkphd.sh
+
+systemctl list-units -t mount
+
+nano /etc/systemd/system/backup-hd.service
+
+[Unit]
+Description=External HD backup script trigger
+Requires=media-bkphd.mount
+After=media-bkphd.mount
+
+[Service]
+ExecStart=/home/Backup/bkphd.sh
+
+[Install]
+WantedBy=media-bkphd.mount
+
+systemctl daemon-reload
+systemctl start backup-hd.service
+systemctl enable backup-hd.service
