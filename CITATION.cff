@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+type: software
+title: "AutoMountBKP: an automatic backup when the backup disk is plugged in"
+abstract: "Step-by-step notes for a Linux office server: an fstab entry, a udev rule, an rsync backup script and a systemd unit, so a labelled USB backup disk is mounted, receives a full backup of the shared folders and the Samba Active Directory backup, is synced, unmounted and powered off, with beeps and log lines at each stage."
+authors:
+  - family-names: "Ramos"
+    given-names: "Daniel Campos"
+    orcid: "https://orcid.org/0009-0001-4546-8673"
+license: GPL-3.0-or-later
+repository-code: "https://github.com/danielcamposramos/AutoMountBKP"
+keywords:
+  - "backup"
+  - "rsync"
+  - "udev"
+  - "systemd"
+  - "Samba"
+  - "Linux"
+  - "Debian"
